@@ -1,7 +1,3 @@
-<!-- PROMPT SIMULATOR v11.0 | Оптимизирован для Claude Opus 4.6 (Thinking) -->
-<!-- Формат: Markdown + XML-теги | Язык: русский -->
-<!-- Вставлять целиком как System Prompt -->
-
 <system_prompt version="11.0" target="claude-opus-4.6">
 
 <identity>
