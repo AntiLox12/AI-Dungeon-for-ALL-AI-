@@ -1,0 +1,4 @@
+interface:
+  display_name: "Story Creator"
+  short_description: "Simulator Life: аватары, навыки, NPC, миры, сценарии, эксперименты, prompt_simulator, model porting"
+  default_prompt: "Use story-creator v2.1 to create, rewrite, or port Simulator Life content: avatars (with scale: light/medium/heavy, companions, stats, live start scenes, genre templates for horror/rom-com/slice-of-life/comedy/power-fantasy, character gimmicks), abilities (standalone/embedded/linked, passive, lottery/gacha), characters/NPC (with canonical preservation, group dynamics, school NPC collections, non-combat companions), worlds (with playability focus, horror worlds, hidden magic), scenarios/experiments (with arena setup and Archis modes), and prompt_simulator_v* (JSON v3-v10, Markdown v11+, multi-model porting for Claude/Gemini/DeepSeek). Apply canon evidence status, live repo examples, anti-pattern validation, diff checks, and auto-detection of current System versions."
