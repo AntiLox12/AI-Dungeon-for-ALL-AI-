@@ -72,3 +72,5 @@ Copy-Item -Recurse -Force ".codex\skills\story-creator\*" $target
 ## Лицензия
 
 Проект предназначен только для личного использования. Распространение, продажа или передача третьим лицам запрещены. Подробности см. в [LICENSE](LICENSE).
+
+Отдельное пояснение о том, что материалы являются AI-oriented / AI-assisted контентом и предназначены для использования с AI-системами, см. в [AI_CONTENT_NOTICE.md](AI_CONTENT_NOTICE.md).
