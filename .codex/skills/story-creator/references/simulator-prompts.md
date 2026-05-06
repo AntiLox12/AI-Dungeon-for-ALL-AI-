@@ -22,6 +22,12 @@
 4. Используй как базу, если пользователь не назвал другую
 ```
 
+Для быстрой read-only проверки можно использовать:
+
+```powershell
+python .codex\skills\story-creator\scripts\project_inventory.py --project-root . --skill-root .codex\skills\story-creator --pretty
+```
+
 ## Format Detection
 
 Проект исторически использовал два формата. Определи формат базовой версии:
@@ -36,14 +42,16 @@
 ### Markdown формат (v11+)
 
 - Файл: `prompt_simulator_v<N>_<target>.md`
-- Структура: Markdown + XML-теги (`<system_prompt>`, `<identity>`, `<priorities>`, `<world_engine>`, `<npc_core>`, `<memory_protocol>`, `<algorithm>` и т.д.)
-- Комментарии: HTML-комментарии `<!-- ... -->` в начале файла
+- Структура: Markdown, часто с XML-envelope (`<system_prompt>`, `<identity>`, `<priorities>`, `<world_engine>`, `<npc_core>`, `<memory_protocol>`, `<algorithm>` и т.д.)
+- Envelope зависит от порта: Opus/Gemini/Grok/ChatGPT используют `<system_prompt>`, DeepSeek в текущем дереве использует plain Markdown-заголовки.
+- Комментарии: HTML-комментарии `<!-- ... -->` в начале файла, если они уже есть в базовом порте.
 - Цель формата: оптимизация для конкретной модели (например, Claude Opus 4.6)
 - Эталон: `prompt_simulator_v11_opus.md`
 
 ### Правило выбора формата
 
 - Если пользователь не указал формат — используй формат последней версии.
+- Если пользователь не просит реархитектуру — сохраняй envelope базового файла. Не добавляй XML только потому, что другой port его использует.
 - Если пользователь просит перевод из JSON в Markdown или наоборот — это допустимо, но осознанно.
 - Не смешивай форматы в одном файле.
 
@@ -56,7 +64,7 @@
 3. Выдели запрошенные изменения.
 4. Сохрани ключевую структуру и порядок блоков, если пользователь не просит реархитектуру.
 5. Обнови `_meta` / заголовок / комментарий осознанно.
-6. Проверь валидность формата.
+6. Проверь валидность формата и сохранение envelope.
 
 ## Core Invariants: Do Not Regress
 
@@ -144,10 +152,12 @@
 
 ### Для Markdown-формата
 
-- Сохраняй XML-теги (`<system_prompt>`, `<identity>` и т.д.).
+- Сохраняй envelope базового файла:
+  - если есть XML-теги (`<system_prompt>`, `<identity>` и т.д.) — они остаются;
+  - если файл plain Markdown — не превращай его в XML без явной причины.
 - Не смешивай XML-теги с JSON-объектами.
 - Используй `---` для разделения секций.
-- HTML-комментарии `<!-- -->` для мета-информации и target-модели.
+- HTML-комментарии `<!-- -->` для мета-информации и target-модели, если этот паттерн уже используется в выбранном порте.
 - Markdown-форматирование: заголовки, таблицы, списки, code-blocks.
 
 ## Anti-Patterns (Не Делай)
@@ -158,6 +168,7 @@
 | Потерян блок при обновлении | Чеклист инвариантов перед сохранением |
 | JSON-формат для v11+ | Markdown + XML-теги |
 | Markdown-формат для v3-v10 | JSON |
+| DeepSeek/plain Markdown port насильно переведён в XML | Сохрани envelope базового файла |
 | Удалена recency zone | Критические правила дублируются в конце |
 | Убран КОНТРОЛЬ ДАННЫХ из Щитка | Верификация каждого поля обязательна |
 | Изменена структура Щитка без причины | Порядок полей стабилен между версиями |
@@ -173,9 +184,13 @@
 
 | Файл | Целевая модель | Формат |
 |------|----------------|--------|
-| `System\prompt_simulator_v11_opus.md` | Claude Opus 4.6 | Markdown + XML |
-| `System\prompt_simulator_v11_gemini.md` | Gemini 3.1 Pro | Markdown + XML |
-| `System\prompt_simulator_v11_deepseek.md` | DeepSeek V3.2 | Markdown + XML |
+| `System\prompt_simulator_v11_opus.md` | Claude Opus 4.6 | Markdown + XML-envelope |
+| `System\prompt_simulator_v11_gemini.md` | Gemini 3.1 Pro Preview | Markdown + XML-envelope |
+| `System\prompt_simulator_v11_deepseek.md` | DeepSeek V3.2 | Plain Markdown |
+| `System\prompt_simulator_v11_grok420.md` | Grok 4.20 Reasoning | Markdown + XML-envelope |
+| `System\prompt_simulator_v11_chatgpt55.md` | ChatGPT GPT-5.5 / GPT-5.5 Pro | Markdown + XML-envelope |
+
+Таблица — снимок текущего дерева. Перед работой всё равно сканируй `System/`.
 
 ### Инварианты (НЕЛЬЗЯ менять при портировании)
 
@@ -199,6 +214,8 @@
 | **КОНТРОЛЬ ДЛИНЫ** | Разные модели имеют разные тенденции по длине | `Абзац описания = 2-4 предложения. Максимум = 350 слов текста` |
 | **Target в заголовке** | Идентификация | `target="deepseek-v3.2"` |
 | **Стиль формулировок** | Некоторые модели лучше реагируют на императив, другие — на описательный стиль | Зависит от модели |
+| **Граница инструментов / поиска** | Модели с tool-use могут подмешать внешние факты | Для ChatGPT/Gemini/Grok явно запретить использовать search/tools как канон без ввода Игрока |
+| **Thinking/reasoning правило** | Reasoning-модели могут начать объяснять внутренний ход | Рефлексия = короткий чеклист, не chain-of-thought |
 
 ### Чеклист портирования
 
@@ -209,7 +226,7 @@
 5. Проверить, что все инварианты сохранены (два закона, щиток, режимы).
 6. Проверить, что recency zone присутствует.
 7. НЕ копировать комментарии и примечания из исходного файла, если они привязаны к другой модели.
-8. Проверить формат: Markdown + XML-теги.
+8. Проверить формат и envelope: XML-tagged Markdown остаётся XML-tagged, plain Markdown остаётся plain Markdown.
 
 ### Naming
 
@@ -223,8 +240,10 @@
 ## Recommended Live Examples
 
 - Markdown (базовый): `System\prompt_simulator_v11_opus.md`
+- Markdown (ChatGPT/GPT-5.5): `System\prompt_simulator_v11_chatgpt55.md`
 - Markdown (Gemini адаптация): `System\prompt_simulator_v11_gemini.md`
 - Markdown (DeepSeek адаптация): `System\prompt_simulator_v11_deepseek.md`
+- Markdown (Grok адаптация): `System\prompt_simulator_v11_grok420.md`
 - JSON (Хроники Архиса): `System\prompt_simulator_v10-archis.json`
 - JSON (максимальная детализация): `System\prompt_simulator_v9Agent.json`
 
@@ -234,6 +253,7 @@
 
 - Базовая версия выбрана осознанно, а не по устаревшему шаблону.
 - Формат файла правильный (JSON или Markdown) и валидный.
+- Envelope базового Markdown-порта сохранён.
 - `_meta` / заголовок обновлён только там, где это нужно.
 - Все инварианты симулятора сохранены (два закона, режимы, щиток, антидрейф).
 - Нет регрессии в сторону советов игроку или контроля Аватара.
@@ -246,4 +266,5 @@
   - Target-модель указана в заголовке.
   - Model-specific блоки переписаны, а не скопированы.
   - Инварианты (два закона, щиток, режимы, recency zone) сохранены.
+  - Граница инструментов/поиска и reasoning/thinking правило соответствуют целевой модели.
   - Нет комментариев/примечаний, привязанных к исходной модели.
