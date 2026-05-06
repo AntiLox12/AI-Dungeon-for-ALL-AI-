@@ -9,8 +9,9 @@
 1. Посмотри, дал ли пользователь конкретный файл.
 2. Найди похожие файлы того же типа в проекте.
 3. Проверь соседние файлы того же мира или той же сущности.
-4. Проверь вложенные каталоги (`Avatars/`, `Skills/`, `Skills/Avatars/`, `Avatars/For Leon/`).
-5. Только потом формируй структуру нового документа.
+4. Проверь вложенные каталоги (`Avatars/`, `Skills/`, `Skills/Avatars/`, `System/`).
+5. Для тяжёлых задач, prompt work и обновления references запусти `scripts/project_inventory.py`.
+6. Только потом формируй структуру нового документа.
 
 ## Where to Look First
 
@@ -29,7 +30,6 @@
 - базовые аватары (`Leon_Avatar_Base.txt`)
 - тематические аватары (`Leon_Avatar_DemonSlayer.txt`, `Leon_Avatar_ResidentEvil.txt`)
 - NPC-аватары (`Ichi_Shinigami_Avatar_DemonSlayer.txt`)
-- вложенный `Avatars/For Leon/` — специфические варианты для одного персонажа
 
 ### Skills
 
@@ -45,7 +45,7 @@
 
 - `prompt_simulator_v*.json` (JSON-формат, версии v3–v10)
 - `prompt_simulator_v*_*.md` (Markdown-формат, начиная с v11; один промпт = несколько адаптаций под разные модели)
-- Актуальные адаптации v11: `_opus.md` (Claude), `_gemini.md` (Gemini), `_deepseek.md` (DeepSeek)
+- Актуальные адаптации v11 определяй сканированием, а не по памяти. В текущем дереве есть ports под Opus/Claude, Gemini, DeepSeek, Grok и ChatGPT/GPT-5.5.
 - системных промптов
 - вспомогательных шаблонов вроде `character_npc_summary_prompt_v1.txt`
 
@@ -141,6 +141,23 @@
 4. Использовать как базу
 ```
 
+## Project Inventory Script
+
+Для задач, где важно не пропустить свежие файлы, можно получить read-only JSON-карту проекта:
+
+```powershell
+python .codex\skills\story-creator\scripts\project_inventory.py --project-root . --skill-root .codex\skills\story-creator --pretty
+```
+
+Используй её перед:
+
+- обновлением `examples-index.md`;
+- созданием или портированием `prompt_simulator_v*`;
+- крупной ревизией skill references;
+- поиском свежих эталонов после активной работы в проекте.
+
+Скрипт не заменяет чтение живых файлов. Он только показывает: последние prompt versions, current ports, свежие root-файлы, количество аватаров/навыков/экспериментов и битые пути в индексе.
+
 ## Minimal Discovery Checklist
 
 Перед записью файла ответь себе:
@@ -151,3 +168,4 @@
 - Не существует ли уже более свежая версия или соседний файл, который нельзя игнорировать?
 - Нет ли уже готового навыка или мира, который можно подключить, а не дублировать?
 - Если файл идёт в подкаталог — соответствует ли паттерн имени соседям?
+- Если задача про prompt/references — совпадает ли reference с реальными файлами в `System/` и индексом примеров?
